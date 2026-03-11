@@ -146,6 +146,132 @@ def build_break_table(df_filtered, main_col, sub_col, selected_phase):
         df_break = pd.DataFrame({"Concepto": ["Sin detalle"], "Conteo": [len(rows_target)]})
     return rows_target, df_break
 
+def is_light_color(color):
+    r, g, b, *_ = color
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return luminance > 0.6
+
+def draw_smart_labels_donut(ax, wedges, sizes, total, wedgewidth):
+    for i, w in enumerate(wedges):
+        theta1, theta2 = w.theta1, w.theta2
+        angle_span = theta2 - theta1
+        mid_theta = np.deg2rad((theta1 + theta2) / 2.0)
+
+        int_val = int(sizes[i])
+        pct_val = sizes[i] / total * 100.0 if total > 0 else 0
+        label_text = f"{int_val}\n{pct_val:.0f}%"
+
+        facecolor = w.get_facecolor()
+        text_color = "black" if is_light_color(facecolor) else "white"
+
+        cx, cy = w.center
+        r_outer = w.r
+        r_inner = w.r - wedgewidth
+        r_mid = (r_outer + r_inner) / 2.0
+
+        # Slice suficientemente grande: etiqueta dentro
+        if angle_span >= 22 and pct_val >= 6:
+            x = cx + np.cos(mid_theta) * r_mid
+            y = cy + np.sin(mid_theta) * r_mid
+
+            ax.text(
+                x, y,
+                label_text,
+                ha="center", va="center",
+                fontsize=10.5,
+                fontweight="bold",
+                color=text_color,
+                linespacing=0.9
+            )
+        else:
+            # Slice pequeño: etiqueta fuera con línea guía
+            x_edge = cx + np.cos(mid_theta) * (r_outer + 0.02)
+            y_edge = cy + np.sin(mid_theta) * (r_outer + 0.02)
+
+            x_text = cx + np.cos(mid_theta) * (r_outer + 0.28)
+            y_text = cy + np.sin(mid_theta) * (r_outer + 0.28)
+
+            ha = "left" if np.cos(mid_theta) >= 0 else "right"
+
+            ax.annotate(
+                label_text,
+                xy=(x_edge, y_edge),
+                xytext=(x_text, y_text),
+                ha=ha, va="center",
+                fontsize=9.5,
+                fontweight="bold",
+                color="black",
+                linespacing=0.9,
+                arrowprops=dict(
+                    arrowstyle="-",
+                    color="gray",
+                    lw=1.0,
+                    shrinkA=0,
+                    shrinkB=0,
+                    connectionstyle="arc3,rad=0.15"
+                )
+            )
+
+def draw_smart_labels_pie(ax, wedges, sizes, total):
+    for i, w in enumerate(wedges):
+        theta1, theta2 = w.theta1, w.theta2
+        angle_span = theta2 - theta1
+        mid_theta = np.deg2rad((theta1 + theta2) / 2.0)
+
+        int_val = int(sizes[i])
+        pct_val = sizes[i] / total * 100.0 if total > 0 else 0
+        label_text = f"{int_val}\n{pct_val:.0f}%"
+
+        facecolor = w.get_facecolor()
+        text_color = "black" if is_light_color(facecolor) else "white"
+
+        cx, cy = w.center
+        r_outer = w.r
+
+        # Slice suficientemente grande: etiqueta dentro
+        if angle_span >= 20 and pct_val >= 7:
+            r_text = r_outer * 0.60
+            x = cx + np.cos(mid_theta) * r_text
+            y = cy + np.sin(mid_theta) * r_text
+
+            ax.text(
+                x, y,
+                label_text,
+                ha="center", va="center",
+                fontsize=9.5,
+                fontweight="bold",
+                color=text_color,
+                linespacing=0.9
+            )
+        else:
+            # Slice pequeño: etiqueta fuera con línea guía
+            x_edge = cx + np.cos(mid_theta) * (r_outer + 0.01)
+            y_edge = cy + np.sin(mid_theta) * (r_outer + 0.01)
+
+            x_text = cx + np.cos(mid_theta) * (r_outer + 0.24)
+            y_text = cy + np.sin(mid_theta) * (r_outer + 0.24)
+
+            ha = "left" if np.cos(mid_theta) >= 0 else "right"
+
+            ax.annotate(
+                label_text,
+                xy=(x_edge, y_edge),
+                xytext=(x_text, y_text),
+                ha=ha, va="center",
+                fontsize=8.8,
+                fontweight="bold",
+                color="black",
+                linespacing=0.9,
+                arrowprops=dict(
+                    arrowstyle="-",
+                    color="gray",
+                    lw=0.9,
+                    shrinkA=0,
+                    shrinkB=0,
+                    connectionstyle="arc3,rad=0.15"
+                )
+            )
+
 def render_pie_subpie(df_main, df_break, selected_phase, main_title, sub_title):
     sizes_main = df_main["Conteo"].values.astype(float)
     labels_main = df_main["Fase"].astype(str).values
@@ -171,11 +297,11 @@ def render_pie_subpie(df_main, df_break, selected_phase, main_title, sub_title):
     startangle = (0 - 360.0 * center_frac) % 360.0
 
     cmap = plt.get_cmap("tab20")
-    default_sub_colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33']
+    default_sub_colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33"]
     sub_colors = [default_sub_colors[i % len(default_sub_colors)] for i in range(len(sizes_sub))]
     main_colors = [cmap(i % 20) for i in range(len(sizes_main))]
 
-    fig = plt.figure(figsize=(14, 6), dpi=dpi)
+    fig = plt.figure(figsize=(11, 4.8), dpi=dpi)
     main_ax = fig.add_axes([0.06, 0.15, 0.44, 0.7])
 
     explode = [explode_target if i == target_idx else 0 for i in range(len(labels_main))]
@@ -186,71 +312,42 @@ def render_pie_subpie(df_main, df_break, selected_phase, main_title, sub_title):
         startangle=startangle,
         explode=explode,
         colors=main_colors,
-        wedgeprops=dict(width=wedgewidth, edgecolor='w')
+        wedgeprops=dict(width=wedgewidth, edgecolor="w")
     )
     main_ax.set(aspect="equal")
-    main_ax.set_title(main_title, fontsize=16, fontweight='bold')
+    main_ax.set_title(main_title, fontsize=16, fontweight="bold")
     main_ax.legend(
         list(labels_main),
-        loc='center right',
+        loc="center right",
         bbox_to_anchor=(-0.12, 0.5),
         ncol=1,
         frameon=False,
         fontsize=11
     )
 
-    for i, w in enumerate(wedges):
-        theta1, theta2 = w.theta1, w.theta2
-        mid_theta = np.deg2rad((theta1 + theta2) / 2.0)
-        text_radius = w.r - (wedgewidth / 2.0)
-        cx, cy = w.center
-        x = cx + np.cos(mid_theta) * text_radius
-        y = cy + np.sin(mid_theta) * text_radius
-        dy = 0.06
-        int_val = int(sizes_main[i])
-        pct_val = sizes_main[i] / total * 100.0 if total > 0 else 0
-
-        main_ax.text(
-            x, y + dy, f"{int_val}",
-            ha='center', va='bottom',
-            fontsize=12, fontweight='bold', color='white'
-        )
-        main_ax.text(
-            x, y - dy, f"{pct_val:.0f}%",
-            ha='center', va='top',
-            fontsize=10, fontweight='bold', color='white'
-        )
+    draw_smart_labels_donut(main_ax, wedges, sizes_main, total, wedgewidth)
 
     sub_ax = fig.add_axes([sub_left, sub_bottom, sub_size, sub_size])
 
-    def subtxt(pct, allvals):
-        absolute = int(round(pct / 100.0 * np.sum(allvals)))
-        return f"{absolute}\n{pct:.0f}%"
-
-    _, _, sub_autotexts = sub_ax.pie(
+    wedges_sub, _ = sub_ax.pie(
         sizes_sub,
         labels=[None] * len(sizes_sub),
         colors=sub_colors,
         startangle=startangle,
-        autopct=lambda pct: subtxt(pct, sizes_sub),
-        pctdistance=0.65,
-        textprops=dict(fontsize=10),
-        wedgeprops=dict(edgecolor='w')
+        wedgeprops=dict(edgecolor="w")
     )
+
     sub_ax.set(aspect="equal")
-    sub_ax.set_title(sub_title, fontsize=14, fontweight='bold', loc='center')
+    sub_ax.set_title(sub_title, fontsize=14, fontweight="bold", loc="center")
     sub_ax.legend(
         list(labels_sub),
-        loc='center left',
+        loc="center left",
         bbox_to_anchor=(1.02, 0.5),
         frameon=False,
         fontsize=10
     )
 
-    for t in sub_autotexts:
-        t.set_fontsize(10)
-        t.set_fontweight('bold')
-        t.set_color('white')
+    draw_smart_labels_pie(sub_ax, wedges_sub, sizes_sub, sizes_sub.sum())
 
     if len(wedges) > 0:
         target_wedge = wedges[target_idx]
@@ -502,7 +599,7 @@ fig_main = render_pie_subpie(
 )
 
 show_team_logo(MAIN_TEAM_NAME, width=150)
-st.pyplot(fig_main)
+st.pyplot(fig_main, use_container_width=True)
 
 st.markdown("<hr style='margin: 28px 0; opacity: 0.22;'>", unsafe_allow_html=True)
 
@@ -515,4 +612,4 @@ fig_rival = render_pie_subpie(
 )
 
 show_team_logo(selected_rival_team, width=150)
-st.pyplot(fig_rival)
+st.pyplot(fig_rival, use_container_width=True)
