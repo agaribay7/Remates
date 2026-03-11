@@ -401,9 +401,10 @@ def render_pie_subbar(
     sub_colors = [default_sub_colors[i % len(default_sub_colors)] for i in range(len(sizes_sub))]
     main_colors = [cmap(i % 20) for i in range(len(sizes_main))]
 
-    fig = plt.figure(figsize=(13.6, 5.8), dpi=dpi)
-    main_ax = fig.add_axes([0.05, 0.05, 0.33, 0.64])
-    sub_ax = fig.add_axes([0.64, 0.05, 0.28, 0.64])
+    # mejora de layout: más balanceado y centrado
+    fig = plt.figure(figsize=(13.2, 5.7), dpi=dpi)
+    main_ax = fig.add_axes([0.07, 0.08, 0.31, 0.60])
+    sub_ax = fig.add_axes([0.62, 0.08, 0.26, 0.60])
 
     explode = [explode_target if i == target_idx else 0 for i in range(len(labels_main))]
 
@@ -426,10 +427,10 @@ def render_pie_subbar(
     main_ax.legend(
         legend_labels_main,
         loc="center right",
-        bbox_to_anchor=(-0.24, 0.5),
+        bbox_to_anchor=(-0.26, 0.5),
         ncol=1,
         frameon=False,
-        fontsize=9.4
+        fontsize=9.2
     )
 
     draw_smart_labels_donut(main_ax, wedges, sizes_main, metric_main, total_main, wedgewidth, metric_label)
@@ -509,7 +510,6 @@ def render_pie_subbar(
 
         sub_ax.tick_params(axis="x", labelsize=8.2)
         sub_ax.tick_params(axis="y", length=0)
-
         sub_ax.set_xlim(0, max_width * 1.42 if max_width > 0 else 1)
 
     if len(wedges) > 0:
@@ -529,7 +529,7 @@ def render_pie_subbar(
 
         sub_pos = sub_ax.get_position()
         end_fig = (
-            sub_pos.x0 - 0.16,
+            sub_pos.x0 - 0.13,
             sub_pos.y0 + sub_pos.height * 0.52
         )
 
@@ -546,14 +546,13 @@ def render_pie_subbar(
         arrow.set_clip_on(False)
         fig.add_artist(arrow)
 
-    # xG/xGC acumulado sutil en esquina superior derecha
     fig.text(
-        0.975,
-        0.955,
+        0.945,
+        0.935,
         f"{metric_total_label}: {format_metric(metric_total_value)}",
         ha="right",
         va="top",
-        fontsize=9.2,
+        fontsize=8.8,
         color="#666666"
     )
 
@@ -798,9 +797,6 @@ fig = render_pie_subbar(
     metric_total_value=metric_total_value
 )
 
-if selected_view == MAIN_TEAM_NAME:
-    show_team_logo(MAIN_TEAM_NAME, width=150)
-
 st.pyplot(fig, use_container_width=True)
 
 # =========================================================
@@ -811,7 +807,7 @@ st.markdown("### Datos originales filtrados")
 left_table_col, right_table_col = st.columns([1, 1], gap="large")
 
 with left_table_col:
-    st.markdown(f"**Tabla Principal (gráfico pie) - {selected_team_label}**")
+    st.markdown(f"**Tabla original filtrada - {selected_team_label}**")
     st.dataframe(
         df_table_general,
         use_container_width=True,
@@ -820,7 +816,7 @@ with left_table_col:
     )
 
 with right_table_col:
-    st.markdown(f"**Tabla filtrada (Subpie) - Fase: {selected_subpie_fase}**")
+    st.markdown(f"**Tabla original filtrada - Fase: {selected_subpie_fase}**")
     st.dataframe(
         df_table_phase,
         use_container_width=True,
