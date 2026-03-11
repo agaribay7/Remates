@@ -135,10 +135,10 @@ def format_metric(x):
     return f"{x:.2f}"
 
 def get_metric_label(selected_view: str):
-    return "xGC" if selected_view == "Rival" else "xG"
+    return "xGC" if selected_view == "xGC" else "xG"
 
 def get_metric_total_label(selected_view: str):
-    return "xGC acumulado" if selected_view == "Rival" else "xG acumulado"
+    return "xGC acumulado" if selected_view == "xGC" else "xG acumulado"
 
 def build_phase_table(df_filtered, main_col, xg_col):
     if df_filtered.empty:
@@ -401,7 +401,6 @@ def render_pie_subbar(
     sub_colors = [default_sub_colors[i % len(default_sub_colors)] for i in range(len(sizes_sub))]
     main_colors = [cmap(i % 20) for i in range(len(sizes_main))]
 
-    # mejora de layout: más balanceado y centrado
     fig = plt.figure(figsize=(13.2, 5.7), dpi=dpi)
     main_ax = fig.add_axes([0.07, 0.08, 0.31, 0.60])
     sub_ax = fig.add_axes([0.62, 0.08, 0.26, 0.60])
@@ -579,13 +578,6 @@ def get_logo_path(team_name: str, logo_dir: str = "."):
                 return path
     return None
 
-def show_team_logo(team_name: str, width: int = 150):
-    logo_path = get_logo_path(team_name, LOGO_DIR)
-    if logo_path:
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c2:
-            st.image(logo_path, width=width)
-
 def show_sidebar_logo(team_name: str, width: int = 70):
     logo_path = get_logo_path(team_name, LOGO_DIR)
     if logo_path:
@@ -712,12 +704,12 @@ auto_rival_teams = (
 )
 auto_rival_teams = sorted(auto_rival_teams, key=lambda x: x.lower())
 
-available_views = [MAIN_TEAM_NAME]
+available_views = ["xG"]
 if auto_rival_teams:
-    available_views.append("Rival")
+    available_views.append("xGC")
 
 selected_view = st.sidebar.radio(
-    "Ver equipo",
+    "Ver métrica",
     options=available_views,
     index=0
 )
@@ -725,7 +717,7 @@ selected_view = st.sidebar.radio(
 metric_label = get_metric_label(selected_view)
 metric_total_label = get_metric_total_label(selected_view)
 
-if selected_view == MAIN_TEAM_NAME:
+if selected_view == "xG":
     selected_team_label = MAIN_TEAM_NAME
     df_selected_team = df[
         (df[team_col] == MAIN_TEAM_NAME) &
