@@ -807,7 +807,7 @@ st.markdown("### Datos originales filtrados")
 left_table_col, right_table_col = st.columns([1, 1], gap="large")
 
 with left_table_col:
-    st.markdown(f"**Tabla original filtrada - {selected_team_label}**")
+    st.markdown(f"**Tabla Principal (Pie) - {selected_team_label}**")
     st.dataframe(
         df_table_general,
         use_container_width=True,
@@ -816,7 +816,7 @@ with left_table_col:
     )
 
 with right_table_col:
-    st.markdown(f"**Tabla original filtrada - Fase: {selected_subpie_fase}**")
+    st.markdown(f"**Tabla desglose (Barras) - Fase: {selected_subpie_fase}**")
     st.dataframe(
         df_table_phase,
         use_container_width=True,
