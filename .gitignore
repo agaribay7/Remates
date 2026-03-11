@@ -1,39 +1,22 @@
 # Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-*.py[cod]
 
 # Virtual environments
 venv/
 .venv/
 env/
-ENV/
 
 # Streamlit secrets
 .streamlit/secrets.toml
 
-# Google credentials
+# Google credentials (NO subir)
 credenciales.json
-service_account.json
-*.json
 
-# Mac / Windows
+# OS files
 .DS_Store
 Thumbs.db
 
-# Python environment files
+# Environment variables
 .env
 .env.*
-
-# Logs
-*.log
-
-# Jupyter
-.ipynb_checkpoints
-
-# Build
-build/
-dist/
-*.egg-info/
